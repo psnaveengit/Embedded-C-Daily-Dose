@@ -64,3 +64,56 @@ int spi_init(spi_config_t *cfg) {
 void spi_deinit(void) {
     SPI_CR1 &= ~SPI_CR1_SPE;
 }
+
+/**
+ * Transfer single byte over SPI
+ * Sends data and returns received byte
+ */
+uint8_t spi_transfer(uint8_t data) {
+    // Wait until TX buffer is empty
+    while(!(SPI_SR & SPI_SR_TXE));
+    
+    // Write data to DR
+    SPI_DR = data;
+    
+    // Wait until RX buffer has data
+    while(!(SPI_SR & SPI_SR_RXNE));
+    
+    // Read and return received data
+    return (uint8_t)SPI_DR;
+}
+
+// Multi-byte transfer function
+int spi_transfer_buffer(uint8_t *tx_buf, uint8_t *rx_buf, uint16_t len) {
+    if(len == 0) return -1;
+    
+    uint16_t i;
+    for(i=0; i<len; i++) {
+        uint8_t tx_data = (tx_buf != NULL) ? tx_buf[i] : 0xFF;
+        uint8_t rx_data = spi_transfer(tx_data);
+        
+        if(rx_buf != NULL) {
+            rx_buf[i] = rx_data;
+        }
+    }
+    
+    return 0;
+}
+
+// Send only (no receive)
+void spi_write(uint8_t *data, uint16_t len) {
+    uint16_t i;
+    for(i=0; i<len; i++) {
+        spi_transfer(data[i]);
+    }
+}
+
+// Receive only (send dummy bytes)
+void spi_read(uint8_t *buf, uint16_t len) {
+    uint16_t i;
+    for(i=0; i<len; i++) {
+        buf[i] = spi_transfer(0xFF);
+    }
+}
+
+// TODO: add DMA support for faster transfers

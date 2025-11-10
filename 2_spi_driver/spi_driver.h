@@ -24,7 +24,8 @@ typedef struct {
 int spi_init(spi_config_t *cfg);
 void spi_deinit(void);
 uint8_t spi_transfer(uint8_t data);
-
-// TODO: add multi-byte transfer functions
+int spi_transfer_buffer(uint8_t *tx_buf, uint8_t *rx_buf, uint16_t len);
+void spi_write(uint8_t *data, uint16_t len);
+void spi_read(uint8_t *buf, uint16_t len);
 
 #endif
